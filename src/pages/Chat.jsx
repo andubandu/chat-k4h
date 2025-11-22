@@ -19,11 +19,15 @@ export default function Chat() {
 const [otherUser, setOtherUser] = useState(null)
 
 useEffect(() => {
-  if (messages.length && user) {
-    const partner = messages.find(m => m.sender._id !== user._id)?.sender
-    setOtherUser(partner)
-  }
-}, [messages, user])
+  if (!user || !chats.length || !chatId) return
+
+  const chat = chats.find(c => c._id === chatId)
+  if (!chat) return
+
+  const partner = chat.participants?.find(p => p._id !== user._id)
+  setOtherUser(partner)
+}, [user, chats, chatId])
+
 
 
   useEffect(() => {
@@ -115,7 +119,8 @@ useEffect(() => {
         chats={chats}
       />
       <div className="flex-1 bg-gray-100 flex flex-col">
-        <ChatHeader messages={messages} user={user} />
+        <ChatHeader messages={messages} user={user} otherUser={otherUser} />
+
         <div className="flex-1 p-4 overflow-y-auto">
           {messages.map(m => (
             <div
