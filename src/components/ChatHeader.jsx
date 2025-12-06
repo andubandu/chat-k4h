@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 
 export default function ChatHeader({ messages, user }) {
   const [otherUser, setOtherUser] = useState(null)
+   const safeMessages = Array.isArray(messages) ? messages : []
+  const unread = safeMessages.filter(m => m.sender?._id !== user?._id && !m.readAt).length
 
   useEffect(() => {
     if (!messages.length || !user) return

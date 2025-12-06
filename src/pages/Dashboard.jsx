@@ -25,6 +25,7 @@ export default function Dashboard() {
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} user={user} loading={loading} chats={chats} />
       <div className="flex-1 bg-gray-100 p-6">
         <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+        <p>Send a message to start a chat.</p>
       </div>
     </div>
   )

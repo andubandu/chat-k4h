@@ -1,34 +1,35 @@
-import React, { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
-import Cookies from 'js-cookie'
-import Login from './pages/Login.jsx'
-import Dashboard from './pages/Dashboard.jsx'
-import Chat from './pages/Chat.jsx'
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie';
+import Login from './pages/Login.jsx';
+import Dashboard from './pages/Dashboard.jsx';
+import Chat from './pages/Chat.jsx';
+import PaymentCard from './pages/paymentCard.jsx';
 
 function ProtectedRoute({ children }) {
-  const token = Cookies.get('token')
-  if (!token) return <Navigate to="/login" replace />
-  return children
+  const token = Cookies.get('token');
+  if (!token) return <Navigate to="/login" replace />;
+  return children;
 }
 
 function UnProtectedRoute({ children }) {
-  const token = Cookies.get('token')
-  if (token) return <Navigate to="/dashboard" replace />
-  return children
+  const token = Cookies.get('token');
+  if (token) return <Navigate to="/dashboard" replace />;
+  return children;
 }
 
 function HashRedirect() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const hash = window.location.hash 
+    const hash = window.location.hash;
     if (hash.startsWith('#/')) {
-      const path = hash.slice(1) 
-      navigate(path, { replace: true })
+      const path = hash.slice(1);
+      navigate(path, { replace: true });
     }
-  }, [])
+  }, []);
 
-  return null
+  return null;
 }
 
 export default function App() {
@@ -47,7 +48,8 @@ export default function App() {
         <Route path="/login" element={<UnProtectedRoute><Login /></UnProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/chat/:id" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+        <Route path="/payment-card/:milestoneId" element={<ProtectedRoute><PaymentCard /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
