@@ -78,7 +78,9 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, user, loading, ch
             <p className="text-gray-400 text-sm mt-1 lowercase">{user.email}</p>
 
             <button
-              onClick={() => window.location.href = "https://www.k4h.dev/profile"}
+              onClick={() => 
+                   Cookies.remove("token")
+                window.location.href = "https://www.k4h.dev/profile"}
               className="mt-4 bg-blue-600 hover:bg-blue-500 w-full py-2 rounded text-sm text-white transition-all"
             >
               back Profile
