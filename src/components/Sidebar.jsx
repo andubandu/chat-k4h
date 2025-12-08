@@ -79,11 +79,14 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, user, loading, ch
 
 <button
   onClick={() => {
-    Cookies.remove("token")     
-    window.location.href = "https://www.k4h.dev/profile"   
+    Cookies.remove("token")
+    window.location.href = "https://www.k4h.dev/profile"
   }}
-              back Profile
-            </button>
+  className="text-red-400 mt-2"
+>
+  Back Profile
+</button>
+
           </>
         )}
       </div>
