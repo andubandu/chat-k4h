@@ -195,7 +195,13 @@ export default function Chat() {
             )
           )}
         </div>
-        <ChatSidebar otherUser={otherUser} />
+       <ChatSidebar
+  chatId={chatId}
+  otherUser={otherUser}
+  user={user}
+  socketRef={socketRef}
+/>
+
         <div className="p-4 border-t bg-white flex gap-2">
           <input className="flex-1 p-2 border rounded" value={input} onChange={handleTyping} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } }} placeholder="Type a message..." />
           <button onClick={sendMessage} className="px-4 bg-blue-600 text-white rounded">Send</button>
