@@ -161,17 +161,19 @@ export default function Chat() {
           </div>
         )}
 
-        {milestone && milestone.status === 'completed' && user._id !== milestone.createdBy && (
-          <div className="w-full p-2 bg-blue-100 text-blue-800 text-sm text-center flex justify-between items-center">
-            <span>Milestone ready for payment: {milestone.title} - ${milestone.price}</span>
-            <button
-              onClick={() => navigate(`/payment-card/${milestone._id}`)}
-              className="px-3 py-1 bg-green-500 text-white rounded"
-            >
-              Pay Now
-            </button>
-          </div>
-        )}
+{milestone && milestone.status === 'completed' && user._id === milestone.createdBy && (
+  <div className="w-full p-2 bg-blue-100 text-blue-800 text-sm text-center flex justify-between items-center">
+    <span>
+      Milestone ready for payment: {milestone.title} - ${milestone.price}
+    </span>
+    <button
+      onClick={() => navigate(`/payment-card/${milestone._id}`)}
+      className="px-3 py-1 bg-green-500 text-white rounded"
+    >
+      Pay Now
+    </button>
+  </div>
+)}
 
         <div className="flex-1 p-4 overflow-y-auto">
           {combinedItems.map(item =>
