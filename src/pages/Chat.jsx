@@ -91,9 +91,14 @@ export default function Chat() {
     s.on('new_message', msg => { if (msg.chat === chatId) setMessages(prev => [...prev, msg]); });
     s.on('typing', data => { if (data.userId !== user._id && data.chatId === chatId) setTyping(data.isTyping); });
     s.on('milestone_created', ({ milestone }) => setMilestone(milestone));
+    s.on('milestone_updated', updatedMilestone => {
+      if (updatedMilestone._id === milestone?._id) {
+        setMilestone(updatedMilestone);
+      }
+    });
 
     return () => s.disconnect();
-  }, [user, chatId]);
+  }, [user, chatId, milestone]);
 
   useEffect(() => {
     if (!user) return;
@@ -135,13 +140,15 @@ export default function Chat() {
         body: JSON.stringify({})
       });
       if (!res.ok) throw new Error('Failed to agree milestone');
-      const data = await res.json();
-      const now = new Date();
-      const due = new Date(milestone.dueDate);
-      const daysLeft = Math.max(0, Math.ceil((due - now) / (1000 * 60 * 60 * 24)));
-      setMilestoneStatus({ milestoneId: milestone._id, timeLeft: daysLeft, agreed: true });
-      setMilestone(null);
-    } catch (err) { console.error(err); }
+      const updatedMilestone = await res.json();
+      setMilestone(updatedMilestone);
+      if (updatedMilestone.status === 'completed') {
+        setMilestoneStatus({ milestoneId: updatedMilestone._id, agreed: true });
+      }
+      socketRef.current.emit('milestone_updated', updatedMilestone);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const combinedItems = [
@@ -161,19 +168,19 @@ export default function Chat() {
           </div>
         )}
 
-{milestone && milestone.status === 'completed' && user._id === milestone.createdBy && (
-  <div className="w-full p-2 bg-blue-100 text-blue-800 text-sm text-center flex justify-between items-center">
-    <span>
-      Milestone ready for payment: {milestone.title} - ${milestone.price}
-    </span>
-    <button
-      onClick={() => navigate(`/payment-card/${milestone._id}`)}
-      className="px-3 py-1 bg-green-500 text-white rounded"
-    >
-      Pay Now
-    </button>
-  </div>
-)}
+        {milestone && milestone.status === 'completed' && user._id === milestone.createdBy && (
+          <div className="w-full p-2 bg-blue-100 text-blue-800 text-sm text-center flex justify-between items-center">
+            <span>
+              Milestone ready for payment: {milestone.title} - ${milestone.price}
+            </span>
+            <button
+              onClick={() => navigate(`/payment-card/${milestone._id}`)}
+              className="px-3 py-1 bg-green-500 text-white rounded"
+            >
+              Pay Now
+            </button>
+          </div>
+        )}
 
         <div className="flex-1 p-4 overflow-y-auto">
           {combinedItems.map(item =>
@@ -183,10 +190,12 @@ export default function Chat() {
                 <div>Description: {item.description}</div>
                 <div>Price: {item.price}</div>
                 <div>Due Date: {new Date(item.dueDate).toLocaleDateString()}</div>
-                <div className="flex gap-2 mt-2">
-                  <button onClick={handleAgree} className="px-2 py-1 bg-green-500 text-white rounded">Agree</button>
-                  <button className="px-2 py-1 bg-red-500 text-white rounded">Disagree</button>
-                </div>
+                {user._id !== milestone.createdBy && item.status !== 'completed' && (
+                  <div className="flex gap-2 mt-2">
+                    <button onClick={handleAgree} className="px-2 py-1 bg-green-500 text-white rounded">Agree</button>
+                    <button className="px-2 py-1 bg-red-500 text-white rounded">Disagree</button>
+                  </div>
+                )}
               </div>
             ) : (
               <div key={item._id} className={`mb-3 flex ${item.sender?._id === user?._id ? 'justify-end' : 'justify-start'}`}>
@@ -197,15 +206,17 @@ export default function Chat() {
             )
           )}
         </div>
-       <ChatSidebar
-  chatId={chatId}
-  otherUser={otherUser}
-  user={user}
-  socketRef={socketRef}
-/>
+
+        <ChatSidebar chatId={chatId} otherUser={otherUser} user={user} socketRef={socketRef} />
 
         <div className="p-4 border-t bg-white flex gap-2">
-          <input className="flex-1 p-2 border rounded" value={input} onChange={handleTyping} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } }} placeholder="Type a message..." />
+          <input
+            className="flex-1 p-2 border rounded"
+            value={input}
+            onChange={handleTyping}
+            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } }}
+            placeholder="Type a message..."
+          />
           <button onClick={sendMessage} className="px-4 bg-blue-600 text-white rounded">Send</button>
         </div>
       </div>
