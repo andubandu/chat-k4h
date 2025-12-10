@@ -131,25 +131,36 @@ export default function Chat() {
     typingRef.current = setTimeout(() => { socketRef.current.emit('typing', { chatId, isTyping: false }); }, 800);
   };
 
-  const handleAgree = async () => {
-    if (!milestone) return;
-    try {
-      const res = await fetch(`https://api.k4h.dev/milestones/${milestone._id}/agree`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({})
-      });
-      if (!res.ok) throw new Error('Failed to agree milestone');
-      const updatedMilestone = await res.json();
-      setMilestone(updatedMilestone);
-      if (updatedMilestone.status === 'completed') {
-        setMilestoneStatus({ milestoneId: updatedMilestone._id, agreed: true });
-      }
-      socketRef.current.emit('milestone_updated', updatedMilestone);
-    } catch (err) {
-      console.error(err);
+ const handleAgree = async () => {
+  if (!milestone) return;
+  try {
+    const res = await fetch(`https://api.k4h.dev/milestones/${milestone._id}/agree`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json', 
+        Authorization: `Bearer ${token}` 
+      },
+      body: JSON.stringify({}),
+      mode: 'cors',
+      credentials: 'include' 
+    });
+
+    if (!res.ok) throw new Error('Failed to agree milestone');
+
+    const updatedMilestone = await res.json();
+    setMilestone(updatedMilestone);
+
+    if (updatedMilestone.status === 'completed') {
+      setMilestoneStatus({ milestoneId: updatedMilestone._id, agreed: true });
     }
-  };
+
+ 
+    socketRef.current.emit('milestone_updated', updatedMilestone);
+
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   const combinedItems = [
     ...messages.map(m => ({ ...m, type: 'text' })),
