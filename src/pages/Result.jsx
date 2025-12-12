@@ -1,0 +1,82 @@
+import React, { useEffect, useState } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import Cookies from 'js-cookie';
+import { CheckCircle, XCircle, Loader2, ArrowRight } from 'lucide-react';
+
+const Result = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [status, setStatus] = useState('processing'); // processing | success | error
+
+  useEffect(() => {
+    const paymentStatus = searchParams.get('payment');
+    const paypalOrderId = searchParams.get('token');
+    const milestoneId = searchParams.get('milestoneId');
+
+    if (paymentStatus === 'success' && paypalOrderId) {
+      finalizePayment(milestoneId, paypalOrderId);
+    } else {
+      setStatus('error');
+    }
+  }, []);
+
+  const finalizePayment = async (mId, pOrderId) => {
+    try {
+      const token = Cookies.get('token');
+      await axios.post(
+        `https://api.k4h.dev/payments/milestones/${mId}/pay`,
+        { paypalOrderId: pOrderId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setStatus('success');
+    } catch (err) {
+      console.error("Finalize Error:", err.response?.data);
+      setStatus('error');
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
+        {status === 'processing' && (
+          <>
+            <Loader2 className="animate-spin text-blue-600 mx-auto mb-4" size={48} />
+            <h2 className="text-2xl font-bold text-gray-800">Verifying Payment...</h2>
+            <p className="text-gray-500 mt-2">Please don't close this window while we secure the escrow funds.</p>
+          </>
+        )}
+
+        {status === 'success' && (
+          <>
+            <CheckCircle className="text-green-500 mx-auto mb-4" size={64} />
+            <h2 className="text-2xl font-bold text-gray-800">Payment Secured!</h2>
+            <p className="text-gray-600 mt-2">The milestone has been marked as paid and funds are held in escrow.</p>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="mt-8 w-full flex items-center justify-center gap-2 bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-black transition-all"
+            >
+              Go to Dashboard <ArrowRight size={18} />
+            </button>
+          </>
+        )}
+
+        {status === 'error' && (
+          <>
+            <XCircle className="text-red-500 mx-auto mb-4" size={64} />
+            <h2 className="text-2xl font-bold text-gray-800">Payment Failed</h2>
+            <p className="text-gray-600 mt-2">We couldn't finalize the transaction. If money was taken from your account, please contact support.</p>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="mt-8 w-full bg-red-600 text-white py-3 rounded-xl font-bold hover:bg-red-700 transition-all"
+            >
+              Return to Dashboard
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Result;

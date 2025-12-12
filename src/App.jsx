@@ -4,7 +4,7 @@ import Cookies from 'js-cookie';
 import Login from './pages/Login.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Chat from './pages/Chat.jsx';
-import PaymentCard from './pages/paymentCard.jsx';
+import Result from './pages/Result.jsx'; // The magic landing page
 
 function ProtectedRoute({ children }) {
   const token = Cookies.get('token');
@@ -27,7 +27,7 @@ function HashRedirect() {
       const path = hash.slice(1);
       navigate(path, { replace: true });
     }
-  }, []);
+  }, [navigate]);
 
   return null;
 }
@@ -48,7 +48,11 @@ export default function App() {
         <Route path="/login" element={<UnProtectedRoute><Login /></UnProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/chat/:id" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-        <Route path="/payment-card/:milestoneId" element={<ProtectedRoute><PaymentCard /></ProtectedRoute>} />
+
+        {/* The Magic landing route - Finalizes the payment */}
+        <Route path="/result" element={<ProtectedRoute><Result /></ProtectedRoute>} />
+
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
   );

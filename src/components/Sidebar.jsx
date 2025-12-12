@@ -17,10 +17,10 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, user, loading, ch
   return (
     <div
       className={`
-        ${sidebarOpen ? "w-72" : "w-20"} 
-        bg-gray-900 text-white h-screen 
-        border-r border-gray-800
-        transition-all duration-300 
+        ${sidebarOpen ? "w-72" : "w-20"}
+        bg-gray-900 text-white h-screen
+        border-r border-gray-800n
+        transition-all duration-300
         flex flex-col shadow-xl
       `}
     >
@@ -111,11 +111,11 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, user, loading, ch
               <button
                 onClick={() => {
                   Cookies.remove("token");
-                  window.location.href = "https://www.k4h.dev/profile";
+                  window.location.href = `https://www.k4h.dev/login?token=${Cookies.get('token')}`;
                 }}
                 className="mt-3 text-red-400 hover:text-red-300 text-sm transition"
               >
-                🔙 Back Profile
+                🔙 Back to K4H
               </button>
             )}
           </div>
