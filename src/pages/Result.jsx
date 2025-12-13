@@ -44,7 +44,7 @@ const Result = () => {
       const currency = 'USD';
 
       await axios.post(
-        `https://api.k4h.dev/payments/manual-transaction`,
+        `https://api.k4h.dev/misc/manual-transaction`,
         {
           milestoneId,
           payerId: buyerId || milestoneRes.data.createdBy,
