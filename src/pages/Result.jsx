@@ -7,31 +7,58 @@ import { CheckCircle, XCircle, Loader2, ArrowRight } from 'lucide-react';
 const Result = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [status, setStatus] = useState('processing'); // processing | success | error
+  const [status, setStatus] = useState('processing');
 
   useEffect(() => {
     const paymentStatus = searchParams.get('payment');
     const paypalOrderId = searchParams.get('token');
     const milestoneId = searchParams.get('milestoneId');
+    const buyerId = searchParams.get('buyerId');
+    const sellerId = searchParams.get('sellerId');
 
-    if (paymentStatus === 'success' && paypalOrderId) {
-      finalizePayment(milestoneId, paypalOrderId);
+    if (paymentStatus === 'success' && paypalOrderId && milestoneId) {
+      finalizePayment(milestoneId, paypalOrderId, buyerId, sellerId);
     } else {
       setStatus('error');
     }
   }, []);
 
-  const finalizePayment = async (mId, pOrderId) => {
+  const finalizePayment = async (milestoneId, paypalOrderId, buyerId, sellerId) => {
     try {
       const token = Cookies.get('token');
-      await axios.post(
-        `https://api.k4h.dev/payments/milestones/${mId}/pay`,
-        { paypalOrderId: pOrderId },
+      let resolvedSellerId = sellerId;
+
+      if (!sellerId) {
+        const milestoneRes = await axios.get(
+          `https://api.k4h.dev/milestones/${milestoneId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        resolvedSellerId = milestoneRes.data.proposal.seller;
+      }
+
+      const milestoneRes = await axios.get(
+        `https://api.k4h.dev/milestones/${milestoneId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      const amount = milestoneRes.data.price;
+      const currency = 'USD';
+
+      await axios.post(
+        `https://api.k4h.dev/payments/manual-transaction`,
+        {
+          milestoneId,
+          payerId: buyerId || milestoneRes.data.createdBy,
+          payeeId: resolvedSellerId,
+          amount,
+          currency,
+          paymentID: paypalOrderId
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
       setStatus('success');
     } catch (err) {
-      console.error("Finalize Error:", err.response?.data);
+      console.error("Finalize Error:", err.response?.data || err.message);
       setStatus('error');
     }
   };

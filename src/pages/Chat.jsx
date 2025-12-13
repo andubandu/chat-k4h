@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import io from 'socket.io-client';
 import Cookies from 'js-cookie';
 import Sidebar from '../components/Sidebar';
@@ -82,6 +82,19 @@ export default function Chat() {
   }, [chatId, user, token]);
 
   useEffect(() => {
+  const query = new URLSearchParams(location.search);
+  const orderId = query.get('token');
+  const milestoneId = query.get('milestoneId');
+  const paymentStatus = query.get('payment');
+
+  if (orderId && milestoneId && paymentStatus === 'success') {
+    handleCapture(milestoneId, orderId);
+    navigate(location.pathname, { replace: true });
+  }
+}, [location, navigate]);
+
+
+  useEffect(() => {
     if (!user) return;
     const s = io('https://api.k4h.dev', { auth: { token } });
     socketRef.current = s;
@@ -119,6 +132,10 @@ export default function Chat() {
           Authorization: `Bearer ${token}`
         },
       });
+      const res2=await fetch(`https://api.k4h.dev/payments/milestones/${milestoneId}/pay`, {
+        method: 'POST',
+        headers: {},
+      });
       const data = await res.json();
       if (res.ok && data.redirectUrl) {
         window.location.href = data.redirectUrl; // Redirect to PayPal Approval Page
@@ -127,6 +144,32 @@ export default function Chat() {
       }
     } catch (err) { console.error("Payment error", err); }
   };
+
+  const handleCapture = async (milestoneId, paypalOrderId) => {
+  if (!milestoneId || !paypalOrderId) return;
+
+  try {
+    const res = await fetch(`https://api.k4h.dev  /payments/milestones/${milestoneId}/pay`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ paypalOrderId })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.error || 'Payment capture failed.');
+      return;
+    }
+
+    setMilestone(data.milestone);
+    socketRef.current.emit('milestone_updated', data.milestone);
+    alert('Payment captured successfully!');
+  } catch (err) {
+    console.error('Payment capture error:', err);
+    alert('Critical error during payment capture.');
+  }
+};
+
 
   const handleAgree = async () => {
     if (!milestone) return;

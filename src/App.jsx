@@ -49,8 +49,7 @@ export default function App() {
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/chat/:id" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
 
-        {/* The Magic landing route - Finalizes the payment */}
-        <Route path="/result" element={<ProtectedRoute><Result /></ProtectedRoute>} />
+        <Route path="/result" element={<Result />} />
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
