@@ -13,14 +13,14 @@ const Result = () => {
     const init = async () => {
       const paymentStatus = searchParams.get('payment');
       const paypalOrderId = searchParams.get('token');
-      const milestoneId = searchParams.get('milestoneId');
+      const chatId = searchParams.get('milestoneId')
       const buyerId = searchParams.get('buyerId');
       const sellerId = searchParams.get('sellerId');
 
-      console.log('Query params:', { paymentStatus, paypalOrderId, milestoneId, buyerId, sellerId });
+      console.log('Query params:', { paymentStatus, paypalOrderId, chatId, buyerId, sellerId });
 
-      if (paymentStatus === 'success' && paypalOrderId && milestoneId) {
-        await finalizePayment(milestoneId, paypalOrderId, buyerId, sellerId);
+      if (paymentStatus === 'success' && paypalOrderId && chatId) {
+        await finalizePayment(chatId, paypalOrderId, buyerId, sellerId);
       } else {
         setStatus('error');
       }
@@ -29,7 +29,7 @@ const Result = () => {
     init();
   }, []);
 
-  const finalizePayment = async (milestoneId, paypalOrderId, buyerId, sellerId) => {
+  const finalizePayment = async (chatId, paypalOrderId, buyerId, sellerId) => {
     try {
       const token = Cookies.get('token');
       if (!token) {
@@ -38,18 +38,29 @@ const Result = () => {
         return;
       }
       const milestoneRes = await axios.get(
-        `https://api.k4h.dev/milestones/${milestoneId}`,
+        `https://api.k4h.dev/milestones/${chatId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      const milestoneData = milestoneRes.data;
-      const resolvedSellerId = sellerId || milestoneData.proposal.seller;
-      const resolvedBuyerId = buyerId || milestoneData.createdBy;
-      const amount = milestoneData.price;
-      const currency = 'USD'
+      if (!milestoneRes.data || milestoneRes.data.length === 0) {
+        console.error('No milestones found for this chat');
+        setStatus('error');
+        return;
+      }
+      const activeMilestone = milestoneRes.data.find(m => m.status === 'in_progress');
+      if (!activeMilestone) {
+        console.error('No active milestone found');
+        setStatus('error');
+        return;
+      }
+
+      const resolvedSellerId = sellerId || activeMilestone.proposal.seller._id;
+      const resolvedBuyerId = buyerId || activeMilestone.proposal.buyer;
+      const amount = activeMilestone.proposal.price;
+      const currency = 'USD';
 
       const payload = {
-        milestoneId,
+        milestoneId: activeMilestone._id,
         payerId: resolvedBuyerId,
         payeeId: resolvedSellerId,
         amount,
