@@ -23,7 +23,6 @@ export default function Chat() {
   const token = Cookies.get('token');
   const [otherUser, setOtherUser] = useState(null);
 
-  // --- DATA FETCHING ---
 
   async function findActiveMilestone(chatId) {
     if (!chatId || !token) return null;
@@ -120,9 +119,6 @@ export default function Chat() {
     loadChats();
   }, [user, chatId, token]);
 
-  // --- ACTIONS ---
-
-  // UPDATED: Matches your backend router.post('/milestones/:id/create-order')
   const handlePayment = async (milestoneId) => {
     try {
       const res = await fetch(`https://api.k4h.dev/payments/milestones/${milestoneId}/create-order`, {
@@ -138,7 +134,7 @@ export default function Chat() {
       });
       const data = await res.json();
       if (res.ok && data.redirectUrl) {
-        window.location.href = data.redirectUrl; // Redirect to PayPal Approval Page
+        window.location.href = data.redirectUrl; 
       } else {
         alert(data.error || "Failed to initiate payment");
       }
@@ -182,7 +178,6 @@ export default function Chat() {
       if (res.ok) {
         setMilestone(updated);
         socketRef.current.emit('milestone_updated', updated);
-        // Automatically trigger your specific payment flow for the Buyer
         if (user?._id !== updated.createdBy) {
           handlePayment(updated._id);
         }
@@ -211,14 +206,11 @@ export default function Chat() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
-      {/* 1. LEFT SIDEBAR: Navigation & Chats */}
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} user={user} loading={loadingUser} chats={chats} />
 
-      {/* 2. CENTER: Main Chat Window */}
       <div className="flex-1 bg-gray-50 flex flex-col min-w-0">
         <ChatHeader messages={messages} user={user} otherUser={otherUser} />
 
-        {/* Action Banner: Appears for Buyer after Agreement but before Payment */}
         {milestone && milestone.status === 'in_progress' && !milestone.buyerPaid && user?._id !== milestone.createdBy && (
           <div className="w-full p-3 bg-indigo-600 text-white text-sm flex justify-between items-center px-6 shadow-md z-10">
             <span className="font-medium">Contract Active. Please fund the escrow to start the project.</span>
@@ -231,7 +223,6 @@ export default function Chat() {
           </div>
         )}
 
-        {/* Message Feed */}
         <div className="flex-1 p-6 overflow-y-auto space-y-4">
           {combinedItems.map(item =>
             item.type === 'milestone' ? (
@@ -245,7 +236,6 @@ export default function Chat() {
                   DUE DATE: {new Date(item.dueDate).toLocaleDateString()}
                 </div>
 
-                {/* Decision Buttons (Only for Buyer) */}
                 {user?._id !== item.createdBy && item.status === 'pending' && (
                   <div className="flex gap-3 mt-5">
                     <button onClick={handleAgree} className="flex-1 py-2.5 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition">
@@ -272,7 +262,6 @@ export default function Chat() {
           {typing && <div className="text-[10px] text-gray-400 italic ml-2">Typing...</div>}
         </div>
 
-        {/* Message Input Bar */}
         <div className="p-4 bg-white border-t border-gray-100 flex gap-3 items-center">
           <input
             className="flex-1 p-3.5 bg-gray-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-indigo-100 text-sm"
@@ -287,7 +276,6 @@ export default function Chat() {
         </div>
       </div>
 
-      {/* 3. RIGHT SIDEBAR: Placed after the center column to align right */}
       <ChatSidebar chatId={chatId} otherUser={otherUser} user={user} socketRef={socketRef} />
     </div>
   );
