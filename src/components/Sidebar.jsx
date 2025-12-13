@@ -111,7 +111,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, user, loading, ch
               <button
                 onClick={() => {
                   Cookies.remove("token");
-                  window.location.href = `https://www.k4h.dev/login?token=${Cookies.get('token')}`;
+                  window.location.href = `https://www.k4h.dev/profile`;
                 }}
                 className="mt-3 text-red-400 hover:text-red-300 text-sm transition"
               >
