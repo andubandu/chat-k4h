@@ -115,7 +115,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, user, loading, ch
                 }}
                 className="mt-3 text-red-400 hover:text-red-300 text-sm transition"
               >
-                🔙 Back to K4H
+                🔙 Back to Profile
               </button>
             )}
           </div>
