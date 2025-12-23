@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import Cookies from 'js-cookie'
 import axios from 'axios'
 import { toast } from 'react-hot-toast'
@@ -12,7 +12,9 @@ export default function Login() {
     const urlToken = params.get('token')
 
     if (urlToken) {
-      Cookies.set('token', urlToken, { expires: 1 / 12 }) 
+      Cookies.set('token', urlToken, { expires: 1 / 12 })
+
+      window.history.replaceState({}, '', '/login')
       window.location.href = '/dashboard'
       return
     }
@@ -34,7 +36,7 @@ export default function Login() {
 
       toast.success('Logged in')
       window.location.href = '/dashboard'
-    } catch (err) {
+    } catch {
       toast.error('Login failed')
     }
   }
@@ -65,9 +67,31 @@ export default function Login() {
 
           <button
             onClick={handleLogin}
-            className="mt-4 w-[150px] text-white  from-red-400 via-red-500 to-red-600 rounded-base px-4 py-2.5"
+            className="mt-4 w-[150px] text-white rounded-base px-4 py-2.5"
           >
             Login
+          </button>
+          <button>
+<a
+  href={`https://api.k4h.dev/auth/google?redirect=${encodeURIComponent(
+    window.location.origin + '/login'
+  )}`}
+  className="mt-4 w-[150px] text-white rounded-base px-4 py-2.5"
+>
+  Login with Google
+</a>
+
+          </button>
+          <button>
+<a
+  href={`https://api.k4h.dev/auth/github?redirect=${encodeURIComponent(
+    window.location.origin + '/login'
+  )}`}
+  className="mt-4 w-[150px] text-white rounded-base px-4 py-2.5"
+>
+  Login with GitHub
+</a>
+
           </button>
         </div>
       </div>

@@ -10,76 +10,55 @@ const Result = () => {
   const [status, setStatus] = useState('processing');
 
   useEffect(() => {
-    const init = async () => {
-      const paymentStatus = searchParams.get('payment');
-      const paypalOrderId = searchParams.get('token');
-      const chatId = searchParams.get('milestoneId')
-      const buyerId = searchParams.get('buyerId');
-      const sellerId = searchParams.get('sellerId');
+    const paymentStatus = searchParams.get('payment');
+    const paypalOrderId = searchParams.get('token');
+    const milestoneId = searchParams.get('milestoneId');
+    const buyerId = searchParams.get('buyerId');
+    const sellerId = searchParams.get('sellerId');
 
-      console.log('Query params:', { paymentStatus, paypalOrderId, chatId, buyerId, sellerId });
-
-      if (paymentStatus === 'success' && paypalOrderId && chatId) {
-        await finalizePayment(chatId, paypalOrderId, buyerId, sellerId);
-      } else {
-        setStatus('error');
-      }
-    };
-
-    init();
+    if (paymentStatus === 'success' && paypalOrderId && milestoneId) {
+      finalizePayment(milestoneId, paypalOrderId, buyerId, sellerId);
+    } else {
+      setStatus('error');
+    }
   }, []);
 
-  const finalizePayment = async (chatId, paypalOrderId, buyerId, sellerId) => {
+  const finalizePayment = async (milestoneId, paypalOrderId, buyerId, sellerId) => {
     try {
       const token = Cookies.get('token');
-      if (!token) {
-        console.error('No auth token found');
-        setStatus('error');
-        return;
+      let resolvedSellerId = sellerId;
+
+      if (!sellerId) {
+        const milestoneRes = await axios.get(
+          `https://api.k4h.dev/milestones/${milestoneId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        resolvedSellerId = milestoneRes.data.proposal.seller;
       }
+
       const milestoneRes = await axios.get(
-        `https://api.k4h.dev/milestones/${chatId}`,
+        `https://api.k4h.dev/milestones/${milestoneId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      if (!milestoneRes.data || milestoneRes.data.length === 0) {
-        console.error('No milestones found for this chat');
-        setStatus('error');
-        return;
-      }
-      const activeMilestone = milestoneRes.data.find(m => m.status === 'in_progress');
-      if (!activeMilestone) {
-        console.error('No active milestone found');
-        setStatus('error');
-        return;
-      }
-
-      const resolvedSellerId = sellerId || activeMilestone.proposal.seller._id;
-      const resolvedBuyerId = buyerId || activeMilestone.proposal.buyer;
-      const amount = activeMilestone.proposal.price;
+      const amount = milestoneRes.data.price;
       const currency = 'USD';
 
-      const payload = {
-        milestoneId: activeMilestone._id,
-        payerId: resolvedBuyerId,
-        payeeId: resolvedSellerId,
-        amount,
-        currency,
-        paymentID: paypalOrderId
-      };
-
-      console.log('Sending manual transaction payload:', payload);
-
-      const response = await axios.post(
-        'https://api.k4h.dev/misc/manual-transaction',
-        payload,
+      await axios.post(
+        `https://api.k4h.dev/payments/manual-transaction`,
+        {
+          milestoneId,
+          payerId: buyerId || milestoneRes.data.createdBy,
+          payeeId: resolvedSellerId,
+          amount,
+          currency,
+          paymentID: paypalOrderId
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      console.log('Manual transaction response:', response.data);
       setStatus('success');
     } catch (err) {
-      console.error('Finalize Error:', err.response?.data || err.message);
+      console.error("Finalize Error:", err.response?.data || err.message);
       setStatus('error');
     }
   };

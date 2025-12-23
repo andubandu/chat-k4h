@@ -15,7 +15,6 @@ export default function ChatSidebar({ otherUser, chatId, user, socketRef }) {
       });
       const data = await res.json();
       setMilestones(data || []);
-      // Logic to find active milestone if needed
       const active = data.find(m => m.status === 'in_progress' && !m.paidToSeller);
       setActiveMilestone(active || null);
     } catch (err) {
@@ -52,7 +51,6 @@ export default function ChatSidebar({ otherUser, chatId, user, socketRef }) {
     }
   };
 
-  // NEW: Handle marking as complete (Seller Only)
   const handleCompleteWork = async (mId) => {
     try {
       const res = await fetch(`https://api.k4h.dev/milestones/${mId}/complete`, {
@@ -61,7 +59,7 @@ export default function ChatSidebar({ otherUser, chatId, user, socketRef }) {
       });
       if (res.ok) {
         alert("Work submitted! Waiting for buyer to release funds.");
-        fetchMilestones(); // Refresh list
+        fetchMilestones();
       }
     } catch (err) {
       console.error('Completion error:', err);
@@ -142,7 +140,7 @@ export default function ChatSidebar({ otherUser, chatId, user, socketRef }) {
         </div>
       </div>
 
-      {/* 4. Create New Milestone Section (Visible only if user is Seller) */}
+
       <div className="mt-8 pt-6 border-t border-gray-100">
         <h3 className="font-bold text-gray-400 text-xs uppercase tracking-wider mb-3 text-center">New Milestone</h3>
         <div className="space-y-2">

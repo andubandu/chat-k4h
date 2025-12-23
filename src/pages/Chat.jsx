@@ -42,6 +42,19 @@ export default function Chat() {
   }
 
   useEffect(() => {
+  if (!user || !milestone) return;
+
+const isSeller = user._id === milestone.proposal.seller;
+  const role = isSeller ? 'SELLER' : 'BUYER';
+
+  console.log('[CHAT ROLE CHECK]');
+  console.log('User ID:', user._id);
+  console.log('Milestone createdBy:', milestone.proposal.seller);
+  console.log('Identified role:', role);
+}, [user, milestone]);
+
+
+  useEffect(() => {
     const fetchUser = async () => {
       try {
         const res = await fetch('https://api.k4h.dev/auth/me', { headers: { Authorization: `Bearer ${token}` } });
@@ -134,7 +147,7 @@ export default function Chat() {
       });
       const data = await res.json();
       if (res.ok && data.redirectUrl) {
-        window.location.href = data.redirectUrl; 
+        window.location.href = data.redirectUrl;
       } else {
         alert(data.error || "Failed to initiate payment");
       }

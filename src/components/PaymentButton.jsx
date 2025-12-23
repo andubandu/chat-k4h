@@ -10,14 +10,12 @@ const PaymentButton = ({ milestoneId, price }) => {
     setLoading(true);
     try {
       const token = Cookies.get('token');
-      // 1. Call your create-order route
       const { data } = await axios.post(
         `https://api.k4h.dev/payments/milestones/${milestoneId}/create-order`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // 2. Redirect the user to PayPal
       if (data.redirectUrl) {
         window.location.href = data.redirectUrl;
       }

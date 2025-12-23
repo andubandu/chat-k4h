@@ -1,7 +1,13 @@
 import React from "react";
 import Cookies from "js-cookie";
 
-export default function Sidebar({ sidebarOpen, setSidebarOpen, user, loading, chats }) {
+export default function Sidebar({
+  sidebarOpen,
+  setSidebarOpen,
+  user,
+  loading,
+  chats,
+}) {
   const currentUserId = user?._id;
 
   const getOtherUser = (chat) => {
@@ -10,8 +16,16 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, user, loading, ch
 
   const getLastMessagePreview = (chat) => {
     if (!chat.lastMessage) return "No messages yet";
-    const senderPrefix = chat.lastMessage.sender._id === currentUserId ? "You: " : "";
+    const senderPrefix =
+      chat.lastMessage.sender._id === currentUserId ? "You: " : "";
     return senderPrefix + chat.lastMessage.content;
+  };
+
+  const emergencyLogout = () => {
+    Cookies.remove("token");
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.replace("/login");
   };
 
   return (
@@ -19,23 +33,33 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, user, loading, ch
       className={`
         ${sidebarOpen ? "w-72" : "w-20"}
         bg-gray-900 text-white h-screen
-        border-r border-gray-800n
+        border-r border-gray-800
         transition-all duration-300
         flex flex-col shadow-xl
       `}
     >
-      <button
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="mb-6 p-2 rounded-lg hover:bg-gray-800 transition mx-auto text-xl"
-      >
-        {sidebarOpen ? "🔙" : "➡️"}
-      </button>
+      <div className="flex flex-col gap-2 p-3 border-b border-gray-800">
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="p-2 rounded-lg hover:bg-gray-800 transition text-xl"
+        >
+          {sidebarOpen ? "🔙 Collapse" : "➡️"}
+        </button>
 
-      <div className="px-4">
-        <ul className="flex flex-col gap-3">
-          <li
-            className="hover:bg-gray-800 p-2 rounded-lg cursor-pointer transition flex items-center gap-2"
+        {sidebarOpen && (
+          <button
+            onClick={emergencyLogout}
+            className="p-2 rounded-lg bg-red-600/20 text-red-400 hover:bg-red-600/30 transition text-sm"
           >
+            🚨 Emergency Logout
+          </button>
+        )}
+      </div>
+
+      <div className="px-4 mt-4">
+        <ul className="flex flex-col gap-3">
+          <li className="hover:bg-gray-800 p-2 rounded-lg cursor-pointer transition flex items-center gap-2">
+            {!sidebarOpen && <span className="text-xl">🏠</span>}
             {sidebarOpen && <span className="font-medium">Dashboard</span>}
           </li>
         </ul>
@@ -49,7 +73,9 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, user, loading, ch
         )}
 
         {chats.length === 0 ? (
-          <p className="text-gray-500 text-sm">{sidebarOpen && "No chats yet."}</p>
+          <p className="text-gray-500 text-sm">
+            {sidebarOpen && "No chats yet."}
+          </p>
         ) : (
           chats.map((chat) => {
             const otherUser = getOtherUser(chat);
@@ -71,7 +97,9 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, user, loading, ch
                     />
 
                     <div className="flex flex-col overflow-hidden">
-                      <span className="font-semibold">{otherUser.real_name}</span>
+                      <span className="font-semibold">
+                        {otherUser.real_name}
+                      </span>
                       <span className="text-gray-400 text-sm truncate">
                         {getLastMessagePreview(chat)}
                       </span>
@@ -85,38 +113,26 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen, user, loading, ch
       </div>
 
       <div className="p-4 border-t border-gray-800">
-        {loading && <p className="text-gray-400 text-sm">Loading user...</p>}
+        {loading && (
+          <p className="text-gray-400 text-sm">Loading user...</p>
+        )}
 
         {user && (
-          <div className="flex flex-col">
-            <div className="flex items-center gap-3">
-              <img
-                src={user.profile_image}
-                alt="Profile"
-                className="w-10 h-10 rounded-full object-cover"
-              />
-
-              {sidebarOpen && (
-                <div>
-                  <p className="font-semibold">
-                    {user.real_name}{" "}
-                    <span className="text-gray-400">@{user.username}</span>
-                  </p>
-                  <p className="text-gray-500 text-xs">{user.email}</p>
-                </div>
-              )}
-            </div>
+          <div className="flex items-center gap-3">
+            <img
+              src={user.profile_image}
+              alt="Profile"
+              className="w-10 h-10 rounded-full object-cover"
+            />
 
             {sidebarOpen && (
-              <button
-                onClick={() => {
-                  Cookies.remove("token");
-                  window.location.href = `https://www.k4h.dev/profile`;
-                }}
-                className="mt-3 text-red-400 hover:text-red-300 text-sm transition"
-              >
-                🔙 Back to Profile
-              </button>
+              <div>
+                <p className="font-semibold">
+                  {user.real_name}{" "}
+                  <span className="text-gray-400">@{user.username}</span>
+                </p>
+                <p className="text-gray-500 text-xs">{user.email}</p>
+              </div>
             )}
           </div>
         )}
